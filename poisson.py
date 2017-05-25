@@ -208,5 +208,4 @@ def solve(rhs, bc, edges):
     field_rhs = Field(grid)
     field_rhs.values = np.array(rhs)
     solver = MultiGridSolver(field_rhs, bc)
-    solver.solve()
-    return solver.solution()
+    return solver.solve().solution()
