@@ -73,7 +73,8 @@ class Solver:
 
 
 class SimpleSolver(Solver):
-
+    """ A simple relaxation solver """
+    
     def __init__(self, rhs, bc, method="jacobi", atol=1.0E-6):
         super(SimpleSolver, self).__init__(rhs, bc, atol)
 
@@ -81,8 +82,6 @@ class SimpleSolver(Solver):
             self.stepper = JacobiStepper()
         elif method == "gauss_seidel":
             self.stepper = GaussSeidelStepper()
-        elif method == "sor":
-            self.stepper = SORStepper()
         else:
             raise Exception("No such stepper")
 
@@ -91,7 +90,8 @@ class SimpleSolver(Solver):
 
 
 class MultiGridSolver(Solver):
-
+    """ The actual multigrid solver """
+    
     def __init__(self, rhs, bc, atol=1.0E-6):
         super(MultiGridSolver, self).__init__(rhs, bc, atol)
 
@@ -202,7 +202,8 @@ class GaussSeidelStepper:
 
 
 def solve(rhs, bc, edges):
-
+    """ Interface to the outside world for those who do not want to use the module classes """
+    
     domain = Domain(center=(0,0,0), edges=edges)
     grid = Grid(domain, tuple(rhs.shape))
     field_rhs = Field(grid)
