@@ -12,10 +12,9 @@ from grid point index to value, e.g. for imposing a value 5 at the grid point
 
 
 ## Dependencies
-The solver has dependencies to numpy and matplotlib. To install them, use pip:
+The solver has dependencies to numpy. To install them, use pip:
 
 ```
 pip install numpy
-pip install matplotlib
 ```
 
