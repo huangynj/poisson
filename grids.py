@@ -6,6 +6,11 @@ class Domain:
     """A representation of the domain on which to solve the Poisson equation"""
 
     def __init__(self, center, edges):
+        """ Constructor for Domain
+        
+        :param center: The center of the domain. Must be 3D list, array or tuple.  
+        :param edges:  The lenghts of the edges of the domain. Must be 3D list, array or tuple.
+        """
         self.center = tuple(center)
         self.edges = tuple(edges)
 
@@ -19,25 +24,27 @@ class Grid:
     """A cartesian, equidistant grid in 3 dimensions"""
 
     def __init__(self, domain, shape):
+        """ Constructor for Grid
+        
+        :param domain: The region of space the grid shall cover. Must be Domain.
+        :param shape: The number of grid points in each direction. Must be 3D tuple.
+        """
+
+        if not isinstance(domain, Domain):
+            raise TypeError("domain must be a Domain instance")
+        if not isinstance(shape, tuple) or len(shape) != 3:
+            raise TypeError("shape must be a 3d tuple")
+
         self.domain = domain
         self.shape = tuple(shape)
 
-        if len(shape) == 2:
-            nx, ny= shape
-            self.boundary = [(ix, iy) for ix in range(nx)
-                                for iy in range(ny)
-                                if ix == 0 or ix == nx - 1 or
-                                   iy == 0 or iy == ny - 1 ]
-        elif len(shape) == 3:
-            nx, ny, nz = shape
-            self.boundary = [(ix, iy, iz) for ix in range(nx)
-                                for iy in range(ny)
-                                for iz in range(nz)
-                                if ix == 0 or ix == nx - 1 or
-                                   iy == 0 or iy == ny - 1 or
-                                   iz == 0 or iz == nz - 1]
-        else:
-            raise Exception("Only 2 or 3 dimensions implemented")
+        nx, ny, nz = shape
+        self.boundary = [(ix, iy, iz) for ix in range(nx)
+                            for iy in range(ny)
+                            for iz in range(nz)
+                            if ix == 0 or ix == nx - 1 or
+                               iy == 0 or iy == ny - 1 or
+                               iz == 0 or iz == nz - 1]
 
         _edges = np.array(domain.edges)
         self._spacing =  _edges / (np.array(self.shape) - 1)
@@ -50,24 +57,55 @@ class Grid:
         return not self.__eq__(other)
 
     def spacing(self):
+        """ The spacings between grid points of the equidistant grid.
+        
+        :return: (dx, dy, dz) as tuple 
+        """
         return tuple(self._spacing)
 
     def center(self):
+        """ The center of the domain of the grid.
+        
+        :return: the 3D tuple representing the center of the domain.
+        """
         return self.domain.center
 
     def shift(self, translation_vector):
-        self.domain.center += np.array(translation_vector)
+        """ Shift the grid (and domain) by the given translation vector
+        
+        :param translation_vector: a 3D list, array or tuple
+        """
+        self.domain.center += tuple(np.array(translation_vector))
 
     def loc(self, index_tuple):
+        """ Returns the (x, y, z) coordinates for the grid point of the index_tuple
+        
+        :param index_tuple: a 3D list, array or tuple
+        :return: a tuple with the (x, y, z) coordinates of the grid point
+        """
         return self._origin + np.array(index_tuple) * self._spacing
 
     def array(self):
+        """ Factory function to create a zero numpy array with suitable shape for the grid
+        
+        :return: a zero numpy array compatible with the grid
+        """
         return np.zeros(self.shape)
 
     def field(self):
+        """ Factory function to create a zero Field with suitable shape for the grid
+        
+        :return: a zero Field based on the grid
+        """
         return Field(self)
 
     def field_from_function(self, func):
+        """ Factory function to create a Field with suitable shape for the grid. The values
+            are computed by a user-defined function func(x, y, z)
+        
+        :param func: a function f(x, y, z) -> real number
+        :return: a new Field filled with values calculated by func
+        """
         field = Field(self)
         nx, ny, nz = self.shape
         for ind in ( (ix, iy, iz) for ix in range(nx)
@@ -78,11 +116,19 @@ class Grid:
         return field
 
     def indices(self):
+        """ Returns a list of all index tuples of the grid
+        
+        :return: list of index tuples
+        """
         nx, ny, nz = self.shape()
         return [(ix,iy,iz) for ix in range(nx) for iy in range(ny) for iz in range(nz)]
 
     def is_on_boundary(self, index):
-
+        """ Tells whether grid point 'index' is on boundary or not
+        
+        :param index: 
+        :return: boolean
+        """
         for i in range(3):
             if index[i] == 0 or index[i] == self.shape[i]-1:
                 return True
@@ -95,13 +141,21 @@ class MultiGrid:
     """
     
     def __init__(self, root_grid):
+        """ Constructor for MultiGrid
+        
+        :param root_grid: the finest grid of the MultiGrid to construct
+        """
         self.root = root_grid
         self.grids = [root_grid]
         self._build_sub_grids()
 
     def coarsify(self, field):
-        """ Translate the field to the next coarser grid """
+        """ Translate the field to the next coarser grid
         
+        :param field: Field instance on a fine grid to translate 
+        :return: new, translated Field instance on coarser grid
+        """
+
         from_level = self.level(field.grid)
         coarse_grid = self.grids[from_level+1]
         coarse_field = coarse_grid.field()
@@ -116,6 +170,11 @@ class MultiGrid:
         return coarse_field
 
     def has_coarser(self, grid):
+        """ Tells if there is a grid coarser than 'grid' in the multigrid 
+        
+        :param grid: The Grid instance to compare
+        :return: boolean
+        """
         level = self.level(grid)
         return level < len(self.grids)-1
 
@@ -146,7 +205,12 @@ class MultiGrid:
         return avg
 
     def refine(self, field):
-        """ Translate the field to the next finer grid """
+        """ Translate the field to the next finer grid
+        
+        :param field: the Field instance on a coarse grid to translate 
+        :return: the new, translated Field instance on the finer grid
+        """
+
         from_level = self.level(field.grid)
         fine_grid = self.grids[from_level-1]
         fine_field = fine_grid.field()
@@ -167,15 +231,29 @@ class MultiGrid:
         return fine_field
 
     def depth(self):
+        """ Returns the number of grids in the multigrid
+        
+        :return: number of grids
+        """
         return len(self.grids)
 
     def level(self, grid):
+        """ Returns the level of 'grid' in the multigrid. The finest grid is level 0, next coarser is 1, ...
+        
+        :param grid: The Grid instance for which to get the level
+        :return: the level number
+        """
         for lvl, g in enumerate(self.grids):
             if g == grid:
                 return lvl
         raise Exception("No such grid in multigrid")
 
     def grid(self, level):
+        """ Returns the Grid instance for a given level in the multigrid
+        
+        :param level: int
+        :return: Grid instance 
+        """
         if level >= len(self.grids):
             raise IndexError
         return self.grids[level]
@@ -201,11 +279,17 @@ class MultiGrid:
 
 
 class Field:
+    """ A Field is the set of function values together with its grid.    
+    """
 
     def __init__(self, grid):
-        self.domain = grid.domain
         self.grid = grid
         self.values = np.zeros(grid.shape)
 
     def __getitem__(self, index):
+        """ []-Accessor. Returns the a tuple with the location on the grid and the value stored there.
+        
+        :param index: 
+        :return: ( (x,y,z) , value ) all floats
+        """
         return (self.grid.loc(index), self.values[index])
