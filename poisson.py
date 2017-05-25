@@ -8,7 +8,8 @@ from grids import MultiGrid
 
 
 class Solver:
-
+    """ The base class for the other solvers """
+    
     def __init__(self, rhs, bc, atol=1.0E-6):
         self.rhs = rhs
         self.bc = bc
