@@ -1,5 +1,6 @@
-import numpy as np
+""" A utility module with classes for grid representations """
 
+import numpy as np
 
 class Domain:
     """A representation of the domain on which to solve the Poisson equation"""
@@ -15,7 +16,7 @@ class Domain:
         return not self.__eq__(other)
 
 class Grid:
-    """A cartesian, equidistant grid in 2 or 3 dimensions"""
+    """A cartesian, equidistant grid in 3 dimensions"""
 
     def __init__(self, domain, shape):
         self.domain = domain
@@ -89,14 +90,18 @@ class Grid:
 
 
 class MultiGrid:
-
+    """ A represenation of a multigrid, i.e. a set of grids with different coarseness.
+        Can translate fields between grids of different coarseness.
+    """
+    
     def __init__(self, root_grid):
         self.root = root_grid
         self.grids = [root_grid]
         self._build_sub_grids()
 
     def coarsify(self, field):
-
+        """ Translate the field to the next coarser grid """
+        
         from_level = self.level(field.grid)
         coarse_grid = self.grids[from_level+1]
         coarse_field = coarse_grid.field()
@@ -141,7 +146,7 @@ class MultiGrid:
         return avg
 
     def refine(self, field):
-
+        """ Translate the field to the next finer grid """
         from_level = self.level(field.grid)
         fine_grid = self.grids[from_level-1]
         fine_field = fine_grid.field()
