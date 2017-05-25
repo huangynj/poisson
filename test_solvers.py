@@ -2,7 +2,6 @@ import math
 import unittest
 
 from poisson import *
-
 from grids import Domain, Grid
 
 

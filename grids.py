@@ -1,7 +1,5 @@
 import numpy as np
 
-from fields import Field
-
 
 class Domain:
     """A representation of the domain on which to solve the Poisson equation"""
@@ -195,3 +193,14 @@ class MultiGrid:
                     raise Exception("Invalid base grid")
 
             grid = new_grid
+
+
+class Field:
+
+    def __init__(self, grid):
+        self.domain = grid.domain
+        self.grid = grid
+        self.values = np.zeros(grid.shape)
+
+    def __getitem__(self, index):
+        return (self.grid.loc(index), self.values[index])

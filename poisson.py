@@ -4,7 +4,6 @@
 """
 
 from grids import *
-from grids import MultiGrid
 
 
 class Solver:
