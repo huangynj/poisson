@@ -1,5 +1,5 @@
 # poisson
-A lightweight multigrid solver for the 3D Poisson equation in Python
+A lightweight multigrid solver for the 3D Poisson equation in Python 3
 
 ## Usage
 Using the poisson reduces effectively to one method, `u = poisson.solve(rhs, bc)`.
