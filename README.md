@@ -5,7 +5,7 @@ A lightweight multigrid solver for the 3D Poisson equation in Python 3
 
 See `example.py`:
 
-```
+```python
 from grids import Domain, Grid
 from poisson import MultiGridSolver
 
